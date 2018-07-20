@@ -1,0 +1,82 @@
+# NAME is the go package (and repo) short name
+NAME              ?= $(shell basename $(CURDIR))
+# must be set for push/pull! 
+DOCKER_REGISTRY   ?= 
+
+# DOCKER
+# DOCKER_ARGS additonal args to pass to Docker
+# e.g `make DOCKER_ARGS="--entrypoint bash" local-build` drops you into a shell
+DOCKER_ARGS		?=
+# these are the mount locations in the container
+# changing requires updating the dockerfiles
+# not applicable to codebuild
+DISTDIR		?= /dist
+CACHEDIR	?= /.cache
+BINDIR		?= /bin
+
+DOCKER_IMAGE := $(NAME)-build
+DOCKER_FQIN := $(DOCKER_REGISTRY)/$(DOCKER_IMAGE)
+
+# MAKE options
+MAKEFLAGS += --warn-undefined-variables
+.SHELLFLAGS := -eux -o pipefail -c
+# Required for globs to work correctly
+SHELL=/bin/bash
+
+DOCKER_CMD := set +ux; docker run \
+		-u $(shell id -u):$(shell id -g) \
+		--rm -it $(DOCKER_ARGS) \
+		-v $(CURDIR):$(DISTDIR) \
+		-v $(CURDIR)/$(CACHEDIR):$(CACHEDIR) \
+		--name $(DOCKER_IMAGE) \
+		$(DOCKER_IMAGE)
+
+# -e AWS_ACCESS_KEY_ID=$${AWS_ACCESS_KEY_ID} \
+# -e AWS_SECRET_ACCESS_KEY=$${AWS_SECRET_ACCESS_KEY} \
+# -e AWS_SESSION_TOKEN=$${AWS_SESSION_TOKEN} \
+# -e GITHUB_TOKEN=$${GITHUB_TOKEN}
+
+.PHONY: all
+all: local-build local-test
+
+# creates a cache for go build
+.PHONY: local-cache
+	mkdir -p $(CURDIR)/$(CACHEDIR)
+
+# runs 'make clean test-in-container build-in-container' inside the container
+.PHONY: local-build
+local-build: local-cache
+	$(DOCKER_CMD) clean build-in-container
+
+# runs 'make test' inside the container
+.PHONY: local-test
+local-test:
+	$(DOCKER_CMD) test-in-container 
+
+# runs 'make watch' inside the container
+.PHONY: local-watch
+local-watch:
+	$(DOCKER_CMD) watch-in-container
+
+.PHONY: clean
+clean:
+	@rm -rf $(CACHEDIR)
+
+.PHONY: docker-build
+docker-build:
+	docker build -f Dockerfile-build -t $(DOCKER_IMAGE) .
+
+.PHONY: docker-push
+docker-push: build_ver = $(shell docker inspect --format "{{ index .Config.Labels \"version\"}}" $(DOCKER_IMAGE):latest)
+docker-push:
+#in aws land it's easiest to push each tag rather than tagging on the remote
+#push :latest
+	docker tag $(DOCKER_IMAGE) $(DOCKER_FQIN)
+	docker push $(DOCKER_FQIN)
+#push :version
+	docker tag $(DOCKER_IMAGE) $(DOCKER_FQIN):$(build_ver)
+	docker push $(DOCKER_FQIN):$(build_ver)
+
+.PHONY: docker-pull
+docker-pull:
+	docker pull $(DOCKER_FQIN)

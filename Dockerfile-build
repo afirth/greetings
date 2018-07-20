@@ -1,0 +1,54 @@
+FROM golang:1
+# No need to pin to a specific version because the go binaries are stand-alone.
+# Do not use alpine as Lambda doesn't support musl. libc-compat is not perfect!
+# If alpine is needed, use CGO_ENABLED=0, but this will be slower (see Makefile)
+
+LABEL description="builds go executables mounted at /dist"
+LABEL version="0.0.2"
+LABEL maintainer="@afirth"
+
+RUN apt-get update \
+    && apt-get install -y \
+        make \
+        curl \
+        bash \
+        git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install dep - vendoring tool for golang
+# TODO once dep hits 1.0, start checking SHAs
+RUN bash -c "set -o pipefail \
+    && curl -fsSL https://raw.githubusercontent.com/golang/dep/master/install.sh | bash"
+
+# Install gox: go cross compiling tool
+RUN go get -u github.com/mitchellh/gox
+
+# Install github-status-updater for codebuild
+#TODO ADD scripts here once in dockerfiles pipeline
+RUN curl -fsSL https://github.com/flipgroup/github-commit-status/releases/download/1.0.1/github-commit-status-1.0.1-linux-amd64.tar.gz \
+    | tar -xzv -C /usr/local/bin
+
+# For linter in scripts/validate.go
+RUN go get -u gopkg.in/alecthomas/gometalinter.v1 \
+    && gometalinter.v1 --install
+
+# For scantest development (make watch-in-container)
+RUN go get github.com/smartystreets/scantest
+
+# mount .cache here if desired
+RUN mkdir -p /.cache
+VOLUME /.cache
+
+#mount . here
+RUN mkdir -p /dist
+VOLUME /dist
+WORKDIR /dist
+
+RUN chmod -R 0777 /go /.cache #we run as the current userid when invoked
+
+# you should use `docker run -u $(shell id -u):$(shell id -g)`
+# when running locally to e
+USER nobody
+
+ENTRYPOINT ["make"]
+CMD ["clean", "build-in-container"]
