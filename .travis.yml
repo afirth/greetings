@@ -28,9 +28,13 @@ notifications:
 # ...and adding this to your Gopkg.toml file.
 #   required = ["github.com/golangci/golangci-lint/cmd/golangci-lint"]
 before_script:
+  # linter for make test-style
   - go get -u gopkg.in/alecthomas/gometalinter.v1
   - gometalinter.v1 --install
+  # gox for fast compilation
   - go get -u github.com/mitchellh/gox
+  # dep manages vendor
+  - set -o pipefail && curl -fsSL https://raw.githubusercontent.com/golang/dep/master/install.sh | bash
 
 # failing test, we want to see both. Configure golangci-lint with a
 # .golangci.yml file at the top level of your repo.
