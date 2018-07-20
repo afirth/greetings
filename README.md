@@ -13,15 +13,14 @@ assumes:
 
 ## Usage
 
+ - `make` builds and prepares for distribution
+ - `make test` runs go test, coverage, and linters
+ - `make watch` runs make test on code changes
 
-`make` builds and prepares for distribution
-`make test` runs go test, coverage, and linters
-`make watch` runs make test on code changes
-
-`make -f Makefile.docker docker-build` builds the docker container
-`make -f Makefile.docker` builds binaries in container
-`make -f Makefile.docker local-test` runs tests in container
+ - `make -f Makefile.docker docker-build` builds the docker container
+ - `make -f Makefile.docker` builds binaries in container
+ - `make -f Makefile.docker local-test` runs tests in container
 
 ## TODO 
-mounting directly to gopath would make life much easier - this doesn't work
-`make -f Makefile.docker local-watch` runs tests on code changes in container 
+ - mounting directly to gopath would make life much easier - this doesn't work
+ - `make -f Makefile.docker local-watch` runs tests on code changes in container 

@@ -7,7 +7,7 @@ var (
 	World = "world"
 )
 
-// Hello greets who
+// Hello greets in
 func Hello(in string) (out string) {
 	return strings.Join([]string{
 		"hello",
