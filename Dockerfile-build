@@ -15,6 +15,7 @@ RUN apt-get update \
         git \
     && rm -rf /var/lib/apt/lists/*
 
+#TODO someone suggesting using dep add to vendor these directly, then call go install. brilliant!
 # Install dep - vendoring tool for golang
 # TODO once dep hits 1.0, start checking SHAs
 RUN bash -c "set -o pipefail \

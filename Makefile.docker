@@ -60,7 +60,7 @@ local-watch:
 
 .PHONY: clean
 clean:
-	@rm -rf $(CACHEDIR)
+	@rm -rf $(CURDIR)/$(CACHEDIR)
 
 .PHONY: docker-build
 docker-build:
