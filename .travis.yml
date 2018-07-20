@@ -1,0 +1,38 @@
+# use the fast container-based test runner
+sudo: false
+
+language: go
+
+# Only the last two Go releases are supported by the Go team with security
+# updates.
+go:
+  - 1.10.x
+  - 1.x
+
+# Only clone the most recent commit.
+git:
+  depth: 1
+
+# Skip the install step. Don't `go get` dependencies. Only build with the code
+# in vendor/
+install: true
+
+# Don't email me the results of the test runs.
+notifications:
+  email: false
+
+# Anything in before_script that returns a nonzero exit code will flunk the
+# build and immediately stop. It's sorta like having set -e enabled in bash.
+# Make sure golangci-lint is vendored by running
+#   dep ensure -add github.com/golangci/golangci-lint/cmd/golangci-lint
+# ...and adding this to your Gopkg.toml file.
+#   required = ["github.com/golangci/golangci-lint/cmd/golangci-lint"]
+before_script:
+  - go get -u gopkg.in/alecthomas/gometalinter.v1
+  - gometalinter.v1 --install
+  - go get -u github.com/mitchellh/gox
+
+# failing test, we want to see both. Configure golangci-lint with a
+# .golangci.yml file at the top level of your repo.
+script:
+  - make dist test
