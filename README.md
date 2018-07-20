@@ -1,4 +1,6 @@
 # Greetings
+[![Build Status](https://travis-ci.org/afirth/greetings.svg?branch=master)](https://travis-ci.org/afirth/greetings)
+[![GoDoc](https://godoc.org/github.com/afirth/greetings?status.svg)](http://godoc.org/github.com/afirth/greetings)
 
 just some boilerplate
 
